@@ -14,11 +14,34 @@ if ! command -v riff >/dev/null 2>&1; then
   export PATH="$bin_dir:$PATH"
 fi
 
-if [[ -z "$INPUT_PATH" || "$INPUT_PATH" == /* || "/$INPUT_PATH/" == */../* ]]; then
+if [[ -z "$INPUT_PATH" || "$INPUT_PATH" == /* ]]; then
   echo "path must stay inside GITHUB_WORKSPACE" >&2
   exit 1
 fi
-workspace="$GITHUB_WORKSPACE/$INPUT_PATH"
+IFS='/' read -r -a path_parts <<< "$INPUT_PATH"
+for part in "${path_parts[@]}"; do
+  if [[ -z "$part" || "$part" == . || "$part" == .. ]]; then
+    echo "path must stay inside GITHUB_WORKSPACE" >&2
+    exit 1
+  fi
+done
+
+workspace_root="$(cd -P "$GITHUB_WORKSPACE" && pwd -P)"
+workspace_parent="$GITHUB_WORKSPACE/$(dirname "$INPUT_PATH")"
+mkdir -p "$workspace_parent"
+workspace_parent="$(cd -P "$workspace_parent" && pwd -P)"
+case "$workspace_parent" in
+  "$workspace_root"|"$workspace_root"/*) ;;
+  *) echo "path must stay inside GITHUB_WORKSPACE" >&2; exit 1 ;;
+esac
+workspace="$workspace_parent/$(basename "$INPUT_PATH")"
+if [[ -L "$workspace" ]]; then
+  echo "workspace path must not be a symlink" >&2
+  exit 1
+fi
+if [[ -e "$workspace" ]]; then
+  rm -rf -- "$workspace"
+fi
 export RIFF_SERVER="$INPUT_SERVER"
 export RIFF_REPO="$INPUT_REPO"
 if [[ -n "${INPUT_TOKEN:-}" ]]; then
