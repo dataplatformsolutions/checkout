@@ -3,7 +3,7 @@
 Create a Riff workspace at the exact revision carried by a dispatch event. The action optionally materializes only the paths in `sparse`.
 
 ```yaml
-- uses: dataplatformsolutions/riff-checkout@v1
+- uses: dataplatformsolutions/checkout@v1
   with:
     server: ${{ vars.RIFF_SERVER }}
     repo: ${{ github.event.client_payload.repo }}
