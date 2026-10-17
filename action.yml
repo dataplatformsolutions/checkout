@@ -1,0 +1,44 @@
+name: Riff checkout
+description: Check out an exact Riff revision into a sparse workspace
+inputs:
+  server:
+    description: Riff server root URL
+    required: true
+  repo:
+    description: Riff repository name
+    required: true
+  revision:
+    description: Exact changeset ID or revision expression
+    required: true
+  token:
+    description: Riff bearer token
+    required: false
+  sparse:
+    description: Comma-separated paths to include
+    required: false
+  path:
+    description: Workspace directory, relative to GITHUB_WORKSPACE
+    required: false
+    default: riff-workspace
+  riff-binary-url:
+    description: Optional URL to download the riff executable from
+    required: false
+outputs:
+  path:
+    description: Absolute path to the created workspace
+    value: ${{ steps.checkout.outputs.path }}
+runs:
+  using: composite
+  steps:
+    - id: checkout
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        INPUT_SERVER: ${{ inputs.server }}
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_REVISION: ${{ inputs.revision }}
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_SPARSE: ${{ inputs.sparse }}
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_RIFF_BINARY_URL: ${{ inputs.riff-binary-url }}
+      run: bash "$ACTION_PATH/checkout.sh"
